@@ -1,0 +1,285 @@
+#!/bin/bash
+#: Title			:utils.file_matcher_renamer
+#: Date				:2019-06-11
+#: Author			:"Damola Adebayo" <damola@algoLifeNetworks.com>
+#: Version			:1.0
+#: Description		:use to find files that match user specified criteria, then to 
+#: Description		:rename those files in a way specified by user
+#: Description		:
+#: Options			:None
+#: Usage			:
+
+
+echo "	==================================================================="
+echo "	||       Welcome to the FILE MATCHING AND RENAMING UTILITY        ||  author: Damola Adebayo"  
+echo "	==================================================================="
+echo
+echo " Type q to quit."
+echo && sleep 1
+
+# specify error codes
+# exit script correctly
+# capitalise variables?
+
+# define search scope
+# define filename pattern to match 
+#	[test regex pattern matching results on dry run - output to file for review?]
+# execute search
+# define renaming mode 
+#	[test renaming results on dry run - output to file]
+# execute renames [interactive rename option, or not necessary after dry run?]
+
+
+## start with flowchart algorithm this time
+## practice using branches to start new functionality
+## input from command line and from file (local, then remote?)
+## output to stdout (terminal) then to file
+
+
+
+function rename_set_of_files_tails()
+{
+################################### EDIT THIS SECTION #############################################
+directory="$HOME/Documents/myProject/organisedSystem/2.0_businesses/2.0_business_Information_Systems_Admin/ebay_transaction_records/"	
+old_filename_ending="WEB.H264-DEFLATE\[eztv\].mkv"  ## REMEMBER TO ESCAPE SPECIAL CHARS WITH \
+new_filename_ending="mkv"
+###################################################################################################
+echo && echo "old file names:"
+echo "===================="
+ls -lh "$directory"
+
+files_to_rename=`ls $directory/*$old_filename_ending`
+
+echo && echo "files to rename:"
+echo "===================="
+printf "%s\n" $files_to_rename
+
+echo "Press enter if ok..."
+read
+
+for filename in $files_to_rename
+do
+	mv $filename "`echo $filename | sed "s/$old_filename_ending$/$new_filename_ending/"`"
+done	
+
+echo && echo "new file names:"
+echo "===================="
+ls -lh "$directory"
+
+}
+###########################################################
+function rename_set_of_files_heads()
+{
+################################### EDIT THIS SECTION #############################################
+directory="$HOME/Documents/myProject/organisedSystem/2.0_businesses/2.0_business_Information_Systems_Admin/ebay_transaction_records"	
+old_filename_beginning="IMG"  ## REMEMBER TO ESCAPE SPECIAL CHARS WITH \
+new_filename_beginning="spokeGuard"
+###################################################################################################
+echo && echo "old file names:"
+echo "===================="
+ls -lh "$directory"
+
+files_to_rename=`ls $directory/$old_filename_beginning*`
+
+echo && echo "files to rename:"
+echo "===================="
+printf "%s\n" $files_to_rename
+
+echo "Press enter if ok..."
+read
+
+for filename in $files_to_rename
+do
+	#variable expansion to replace all instances of pattern with string:
+	mv $filename ${filename//"$old_filename_beginning"/"$new_filename_beginning"}
+done	
+
+echo && echo "new file names:"
+echo "===================="
+ls -lh "$directory"
+
+}
+###########################################################
+# change access mode permissions of a specified set of files
+function chmod_set_of_files()
+{
+################################### EDIT THIS SECTION #############################################
+directory="$HOME/bin"
+octal="0700" # rwx for user only
+
+###################################################################################################
+
+# find (so traverse whole directory) all executable, regular files
+files_to_chmod=`find $directory -type f -executable`
+
+echo && echo "files to chmod:"
+echo "===================="
+printf "%s\n" $files_to_chmod
+
+echo "Press enter if ok..."
+read
+
+for filename in $files_to_chmod
+do
+	#:
+	chmod $octal $filename
+done	
+
+echo && echo "new file permissions:"
+echo "========================"
+ls -lhR "$directory"
+
+}
+
+###########################################################
+# for example, change 1 to 01 or 001, so files get arranged in correct order for playlists etc
+function rename_set_of_files_pad_nums()
+{
+#0. define variables for directories and regexes for filesets of interest
+#1. define variables for filename beginning [prefix] (everything up to the single digit),
+# and filename ending [postfix] (the single digit and everything after the single digit) 
+#2. use sed, variable expansion (substitution, trim,..) or regex to construct the new filename
+
+################################### EDIT THIS SECTION #############################################
+#directory="/media/damola/2TB_ext_hdd/audio_books/Headspace"
+# no need to escape chars for the find
+#directory="$HOME/Downloads/Headspace - Meditation and Mindfulness Made Simple (2018)"
+#directory="$HOME/Take Files"
+directory="$HOME/Downloads/Headspace"
+
+# Use some of these when improvements are made to this function:
+#padding_character="0" # for zero padding
+#padding_length=1
+#filename_beginning="NULL"
+#filename_ending="NULL"
+
+#regex='^.*(day|Day)\s[0-9]{1}\..*'
+#find_regex='^(.*Day\s|.*day\s)([0-9]{1}\..*)' # match all file extensions
+#rename_regex='^(.*Day\s|.*day\s)([0-9]{1}\.txt|[0-9]{1}\.TXT)' # match specific file extensions of which we're initially aware
+
+find_regex='^(.*Day\s|.*day\s)([0-9]{1}\..*)' # match all file extensions
+#rename_regex='^(.*Day\s|.*day\s)([0-9]{1}\.mp3|[0-9]{1}\.MP3)' # match specific file extensions of which we're initially aware
+#rename_regex='^(.*Day\s|.*day\s)([0-9]{1}\.mp4|[0-9]{1}\.MP4)' # match fails found on 1st run 
+rename_regex='^(.*Day\s|.*day\s)([0-9]{1}\.mp4|[0-9]{1}\.flv)' # match fails found on 2nd run 
+##################################################################################################
+
+OIFS=$IFS # store pre-existing IFS to be reset at end
+count=1
+# quote directory:
+find "$directory" -type f -regextype posix-extended -regex $find_regex |
+while IFS=' ' read fname
+do
+	echo "$count:"
+	echo "original filename:	$fname"
+
+	# we can't use regexes in variable expansion, so we use BASH_REMATCH
+	if [[ $fname =~ $rename_regex ]]
+		then
+			filename_beginning=${BASH_REMATCH[1]}
+			filename_ending=${BASH_REMATCH[2]}
+			#echo "filename beginning: $filename_beginning"
+			#echo "filename ending: $filename_ending"
+			new_filename=${filename_beginning}0${filename_ending}
+			echo "new filename:		$new_filename"
+			mv -i "$fname" "$new_filename" # quotes needed due to spaces in filenames # mv -b could also be used to backup anything overwritten
+			echo		
+		else
+			echo "[[[FAILED TO MATCH ON rename_regex]]]:"
+			echo $fname && echo
+	fi
+count=$((count+1))
+done
+
+IFS=$OIFS
+}
+###########################################################
+remove_last_array_elements()
+{
+#dir_in=$1
+declare -a current_dir_series=( a b c d e )
+#dir1=$dir0
+
+### assign value of last element to dir0
+#dir0="current_dir_series[-1]"
+#dir0="${current_dir_series[-1]}"
+dir0="${current_dir_series[${#current_dir_series[@]}-1]}"
+
+echo $dir0
+echo "${current_dir_series[@]}"
+
+# remove last element, ready for next dir0
+unset 'current_dir_series[-1]'
+echo "${current_dir_series[@]}"
+
+# how many elements does current_dirs_series contain?
+current_dirs_series_size=${#current_dir_series[@]}
+echo "current_dirs_series_size: $current_dirs_series_size"
+
+current_dir_series=( "${current_dir_series[@]:0:$current_dirs_series_size-2}" )
+
+# how many elements does current_dirs_series contain?
+current_dirs_series_size=${#current_dir_series[@]}
+echo "current_dirs_series_size: $current_dirs_series_size"
+echo "${current_dir_series[@]}"
+
+unset 'current_dir_series[-1]'
+echo "${current_dir_series[@]}"
+current_dirs_series_size=${#current_dir_series[@]}
+echo "current_dirs_series_size: $current_dirs_series_size"
+
+dir0="${current_dir_series[-1]}"
+echo $dir0
+
+unset 'current_dir_series[-1]'
+echo "${current_dir_series[@]}"
+current_dirs_series_size=${#current_dir_series[@]}
+echo "current_dirs_series_size: $current_dirs_series_size"
+
+}
+###########################################################
+test_directory_access()
+{
+dir_in=$1 # dir0
+
+# test accessibility
+if [ ! -d $dir_in ] || ! cd $dir_in ## 1st exit condition
+then
+	echo "Directory dir0: "${dir_in}" was not accessible" && echo 
+	return ## exit the function
+	echo "here" ## not executed!
+	# add dir0 to not_found_dirs_list
+	# continue main for loop
+else
+	echo "Directory dir0 "${dir_in}" was seen and accessed ok" && echo
+fi
+}
+
+
+###########################################################
+
+
+#count_while_loop
+#sleep_count_while_loop
+#create_ascii_ref_table
+#powerset
+#find_3_word_lines
+#bits_hash_match_test
+#delete_file_line_numbers
+#delete_file_line_matches
+add_integers
+
+#convert_b64chars_to_b64nums
+#get_fields_from_files
+#append_line
+#copy_to_usb
+#copy_from_usb
+#convert_decimals_to_6bits
+#convert_bitpattern6_to_bytes
+#randoms_within_range
+#line_products
+#rename_set_of_files_tails
+#rename_set_of_files_heads
+#chmod_set_of_files
+#rename_set_of_files_pad_nums
+#remove_last_array_elements
+#test_directory_access "$HOME/log"
