@@ -4,7 +4,6 @@ Welcome
 The purpose of this GitHub repository is to be a source of ideas for anyone interested.
 Feel free to download or fork any of the work contained here. This project is being updated over time.
 
-file_management_shell_scripts
 ===
 
 These programs will be part of my utilities library. Providing some specific **file management services**
@@ -28,4 +27,4 @@ Renames files in a directory, with space characters replaced by underscores.
 
 >That's the purpose of this project.
 
-Thankyou :octocat:
+Thankyou to :octocat:
