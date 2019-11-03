@@ -14,14 +14,15 @@ function main()
     source_dir_fullpath="" # OR #test_line=""
     abs_filepath_regex='^(/{1}[A-Za-z0-9\._-~]+)+$' # absolute file path, ASSUMING NOT HIDDEN FILE, ...
     all_filepath_regex='^(/?[A-Za-z0-9\._-~]+)+$' # both relative and absolute file path
-
+    spaced_files_count=
+    all_files_count= 
     #to_trim_regex='^([A-Za-z0-9\._-~]+[\/])+$'   ##' USE OR DELETE THIS'
     
     get_dir_to_check
+    find_files_and_show_user
 
     exit 0
 
-    find_files_and_show_user
     rename_files #
 
 
@@ -64,9 +65,65 @@ function get_dir_to_check()
 }
 
 ###########################################################
+# find and show us those spaced files
 function find_files_and_show_user()
-{
-    :    
+{    
+    all_files_count=1
+    spaced_files_count=1
+    OIFS=$IFS # store pre-existing IFS to be reset at end
+
+    echo "filename with intra-spaces:"
+    echo "proposed file rename:"
+
+    find "$source_dir_fullpath" -type f |
+    while IFS=$'\n' read file
+    do
+        #echo -e "\e[40m$all_files_count:\e[0m";
+
+        if echo "$file" | grep -q ' '
+        then
+            ((spaced_files_count++))
+            echo -e "\e[40m$spaced_files_count:\e[0m";
+            echo "$file"
+            filename="${file//' '/'_'}"
+            echo "$filename" && echo
+        else
+            :
+            #echo "found one WITHOUT spaces"
+        fi 
+        
+        ((all_files_count++))
+        #((all_files_count+=1))
+        #all_files_count=$(( all_files_count + 1 ))
+        
+        #set --
+	    #set -- "$spaced_files_count" "$all_files_count" # using 'set' to get test_line out of this subprocess into a positional parameter ($1)
+
+
+        if [ $all_files_count -gt 100 ]
+        then
+            set -- "${spaced_files_count}" "$all_files_count"
+            #set -- $spaced_files_count
+            echo "$@"
+
+            echo "TOTAL SPACED FILES: $spaced_files_count"
+            echo "TOTAL FILES: $all_files_count" 
+
+            break
+        fi
+
+    done
+    IFS=$OIFS  
+
+    echo "$@"
+    echo "==========================  $2"
+
+
+    echo "TOTAL SPACED FILES: $spaced_files_count"
+    echo "TOTAL FILES: $all_files_count" 
+    echo "$@"
+	#set -- # unset that positional parameter we used to get test_line out of that while read subprocess
+
 }
 
 ###########################################################
@@ -79,23 +136,19 @@ function rename_files()
     find "$source_dir_fullpath" -type f |
     while IFS=$'\n' read file
     do
-        echo -e "\e[36m$count:\e[0m";
-
-        echo "$file"
         if echo "$file" | grep -q ' '
         then
-            echo "found one WITH spaces"
             filename="${file//' '/'_'}"
-
             mv -i "$file" "$filename" # prompt before overwriting
             if [ $? -eq 0 ]
             then
-                echo "new name: $filename"
+                :
             else
                 echo "ERROR: THIS FILE WAS NOT RENAMED"
             fi
         else
-            echo "found one WITHOUT spaces"
+            :
+            #echo "found one WITHOUT spaces"
         fi 
 
         count=$(( count + 1 ))
