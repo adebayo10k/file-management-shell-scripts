@@ -15,6 +15,8 @@ function main()
     abs_filepath_regex='^(/{1}[A-Za-z0-9\._-~]+)+$' # absolute file path, ASSUMING NOT HIDDEN FILE, ...
     all_filepath_regex='^(/?[A-Za-z0-9\._-~]+)+$' # both relative and absolute file path
 
+    #to_trim_regex='^([A-Za-z0-9\._-~]+[\/])+$'   ##' USE OR DELETE THIS'
+    
     get_dir_to_check
 
     exit 0
@@ -26,7 +28,7 @@ function main()
 } ## end main
 
 
-###########################################################
+#################################################[##########
 # gets from user the directory (absolute path) in which to recursively check/
 # +for filenames with spaces. 
 function get_dir_to_check()
@@ -114,7 +116,7 @@ function rename_files()
 # 
 function test_file_path_valid_form
 {
-	echo && echo "Entered into function ${FUNCNAME[0]}" && echo
+	echo && echo "ENTERED INTO FUNCTION ${FUNCNAME[0]}" && echo
 
 	test_result=
 	test_file_fullpath=$1
@@ -135,7 +137,7 @@ function test_file_path_valid_form
 	fi 
 
 
-	echo && echo "Leaving from function ${FUNCNAME[0]}" && echo
+	echo && echo "LEAVING FROM FUNCTION ${FUNCNAME[0]}" && echo
 
 	return "$test_result"
 }
@@ -146,7 +148,7 @@ function test_file_path_valid_form
 function sanitise_absolute_path_value ##
 {
 
-echo && echo "Entered into function ${FUNCNAME[0]}" && echo
+echo && echo "ENTERED INTO FUNCTION ${FUNCNAME[0]}" && echo
 
 	# sanitise values
 	# - trim leading and trailing space characters
@@ -159,8 +161,11 @@ echo && echo "Entered into function ${FUNCNAME[0]}" && echo
 	test_line=${test_line##[[:blank:]]}
 
 	# TRIM TRAILING / FOR ABSOLUTE PATHS:
-	test_line=${test_line%'/'}
-	#test_line=${test_line%\/}
+    while [[ "$test_line" == *'/' ]]
+    do
+        echo "FOUND ENDING SLASH"
+        test_line=${test_line%'/'}
+    done    
 
 	echo "test line after trim cleanups in "${FUNCNAME[0]}" is: $test_line" && echo
 
@@ -168,7 +173,7 @@ echo && echo "Entered into function ${FUNCNAME[0]}" && echo
 
     echo "source_dir_fullpath after trim cleanups in "${FUNCNAME[0]}" is: $source_dir_fullpath" && echo
 
-echo && echo "Leaving from function ${FUNCNAME[0]}" && echo
+echo && echo "LEAVING FROM FUNCTION ${FUNCNAME[0]}" && echo
 
 }
 ###############################################################################################
@@ -176,7 +181,7 @@ echo && echo "Leaving from function ${FUNCNAME[0]}" && echo
 # 
 function test_dir_path_access
 {
-	echo && echo "Entered into function ${FUNCNAME[0]}" && echo
+	echo && echo "ENTERED INTO FUNCTION ${FUNCNAME[0]}" && echo
 
 	test_result=
 	test_dir_fullpath=$1
@@ -196,7 +201,7 @@ function test_dir_path_access
         #return $E_REQUIRED_FILE_NOT_FOUND
 	fi
 
-	echo && echo "Leaving from function ${FUNCNAME[0]}" && echo
+	echo && echo "LEAVING FROM FUNCTION ${FUNCNAME[0]}" && echo
 
 	return "$test_result"
 }
