@@ -19,15 +19,17 @@ function move_matching_files()
 {
     ################################### EDIT THIS SECTION #############################################
     # specify the file extension to match:
-    file_extension=".mp4"  ## REMEMBER TO ESCAPE SPECIAL CHARS WITH \
+    #file_extension=".mp4"  ## REMEMBER TO ESCAPE SPECIAL CHARS WITH \
+    #file_extension=".mkv"
+    file_extension=".srt"
 
     # specify source directory:
-    #src_dir_path="/media/damola/2TB_ext_hdd/holding_pen_2TB/source"
-    src_dir_path="/media/damola/2TB_ext_hdd/holding_pen_2TB/test_source"	
+    src_dir_path="/media/damola/2TB_ext_hdd/holding_pen_2TB/source"
+    #src_dir_path="/media/damola/2TB_ext_hdd/holding_pen_2TB/test_source"	
 
     # specify destination directory:
-    #dst_dir_path="/media/damola/2TB_ext_hdd/holding_pen_2TB/scan"
-    dst_dir_path="/media/damola/2TB_ext_hdd/holding_pen_2TB/test_scan"	
+    dst_dir_path="/media/damola/2TB_ext_hdd/holding_pen_2TB/scan"
+    #dst_dir_path="/media/damola/2TB_ext_hdd/holding_pen_2TB/test_scan"	
     ###################################################################################################
 
     OIFS=$IFS # store pre-existing IFS to be reset at end
