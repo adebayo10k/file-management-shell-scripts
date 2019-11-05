@@ -3,9 +3,9 @@
 #: Date			:2019-10-26
 #: Author		:adebayo10k
 #: Version		:1.0
-#: Description	:linux doesn't like spaces in filenames
-#: Description	:renames files in a directory, with space characters replaced by underscores
-#: Description	:
+#: Description	:linux doesn't like spaces in filenames.
+#: Description	:renames files in a directory, with intra-filename\
+#: Description	:+space characters replaced by underscores.
 #: Options		:
 ##
 
@@ -18,31 +18,38 @@ function main()
     source_dir_fullpath="" # OR #test_line=""
     abs_filepath_regex='^(/{1}[A-Za-z0-9\._-~]+)+$' # absolute file path, ASSUMING NOT HIDDEN FILE, ...
     all_filepath_regex='^(/?[A-Za-z0-9\._-~]+)+$' # both relative and absolute file path
-    spaced_files_count=
-    all_files_count= 
-    read_dir="y"
+    # totals for each subset of files:
+    all_reg_files_count=0
+    all_dir_files_count=0
+    spaced_reg_files_count=0
+    spaced_dir_files_count=0
     
     get_dir_to_check # including validation of this user input
+
+    get_file_totals
+
+    #reset_file_totals
+
+    #all_reg_files_count=$(get_file_totals2 "$all_reg_files_count" "f" "*")
+    #all_dir_files_count=$(get_file_totals2 "$all_dir_files_count" "d" "*")
+    #spaced_reg_files_count=$(get_file_totals2 "$spaced_reg_files_count" "f" "* *")
+    #spaced_dir_files_count=$(get_file_totals2 "$spaced_dir_files_count" "d" "* *")
+        
+    # negative response terminates program, affirmative just allows continuation
+    get_continue_response "numbers look credible? continue with these numers? [y/n] (or q to quit program)"
+    
+    test_for_more_spaced_filenames # program exits if test fails (ie no more found)
+
+    list_spaced_files # output numbered lists of each subset of intra-space character files
+
+    exit 0
+
+
+
+    get_continue_response "Based on the above lists, do you now want to make ex-program fs changes? [y/n]\n (or q to quit program)"
+
     find_files_and_show_user
-    echo "more files to check in current dir? [y/n]"
-    read answer 
-
-    case $answer in 
-	[yY]) get_backup_mode 
-				;;
-	[nN]) restore_from_backup ##
-				;;
-	[qQ])		echo
-				echo "Goodbye!" && sleep 1
-				exit 0
-				;;
-	*) 		echo "Just a simple b or r will do..." && sleep 2
-		 		get_program_mode
-		 		;;
-    esac 
-
-    echo
-
+    
 
     exit 0
 
@@ -52,7 +59,10 @@ function main()
 } ## end main
 
 
-#################################################[##########
+##########################################################################################################
+##########################################################################################################
+##########################################################################################################
+
 # gets from user the directory (absolute path) in which to recursively check/
 # +for filenames with spaces. 
 function get_dir_to_check()
@@ -88,6 +98,160 @@ function get_dir_to_check()
 }
 
 ###########################################################
+# find the different sets of files and display their totals under source directory
+function get_file_totals()
+{    
+    all_reg_files_count=0
+    all_dir_files_count=0
+    spaced_reg_files_count=0
+    spaced_dir_files_count=0
+
+    OIFS=$IFS # store pre-existing IFS to be reset at end
+    
+    while IFS=$'\n' read all_file_name
+    do
+        ((all_reg_files_count++))   
+    done < <(find "$source_dir_fullpath" -type f)
+    # first < is redirection, second is process substitution
+
+    while IFS=$'\n' read all_dir_name
+    do
+        ((all_dir_files_count++))   
+    done < <(find "$source_dir_fullpath" -type d)    
+
+    while IFS=$'\n' read spaced_file_name
+    do
+        ((spaced_reg_files_count++))   
+    done < <(find "$source_dir_fullpath" -type f -name "* *")
+
+    while IFS=$'\n' read spaced_dir_name
+    do
+        ((spaced_dir_files_count++))   
+    done < <(find "$source_dir_fullpath" -type d -name "* *")
+
+    IFS=$OIFS 
+
+    echo "TOTAL REGULAR FILES: $all_reg_files_count" 
+    echo "TOTAL SPACED REGULAR FILES: $spaced_reg_files_count" && echo
+
+    echo "TOTAL DIRECTORY FILES: $all_dir_files_count"
+    echo "TOTAL SPACED DIRECTORY FILES: $spaced_dir_files_count" && echo
+    
+}
+
+###########################################################
+# find the different sets of files and display their totals under source directory
+function get_file_totals2()
+{    
+    fileset_counter=$1
+    type_arg=$2
+    name_arg=$3
+
+    OIFS=$IFS # store pre-existing IFS to be reset at end
+    
+    while IFS=$'\n' read filename
+    do
+        fileset_counter=$((fileset_counter+1))   
+    done < <(find "$source_dir_fullpath" -type "$type_arg" -name "$name_arg")
+   
+    IFS=$OIFS
+
+    echo "$fileset_counter" # why is this essential?
+    return "$fileset_counter"
+    
+}
+
+###########################################################
+
+# get user response
+function get_continue_response()
+{    
+    msg=$1
+    echo "$msg"
+    read answer
+
+    case $answer in 
+	[yY])   :
+				;;
+	[nN])   echo "check fs manually, then run this program again. come back." && sleep 1
+            echo "exiting now..." && sleep 1
+            exit 0
+ 				;;
+	[qQ])	echo
+			echo "Goodbye!" && sleep 1
+			exit 0
+				;;
+	*) 		echo "Just a simple y or n will do..." && echo && sleep 1
+		 	get_continue_response "$msg"
+		 		;;
+    esac 
+
+}
+
+###########################################################
+# 
+function test_for_more_spaced_filenames()
+{
+    if [ "$spaced_reg_files_count" -eq 0 ] && [ "$spaced_dir_files_count" -eq 0 ]
+    then
+        echo "ALL FILENAMES ARE WITHOUT SPACE CHARACTERS" && echo && sleep 1
+        echo "Exiting now..." && echo && sleep 1
+        exit 0
+    else
+        echo "AT LEAST ONE FILENAME STILL CONTAINS SPACE CHARACTERS" && echo && sleep 1
+        echo "Continuing with program execution..." && echo && sleep 1
+    fi
+
+}
+
+###########################################################
+# find and show user those spaced files
+function list_spaced_files()
+{
+    spaced_reg_files_count=0
+    spaced_dir_files_count=0
+
+    OIFS=$IFS # store pre-existing IFS to be reset at end
+    
+    echo "REGULAR FILES WITH INTRA-FILENAME SPACES:"
+    echo "=========================================" && echo
+
+    # first < is redirection, second is process substitution
+    while IFS=$'\n' read spaced_file_name
+    do
+        ((spaced_reg_files_count++))
+        echo -e "\e[40m$spaced_reg_files_count:\e[0m";
+        echo "$spaced_file_name"
+        proposed_filename="${spaced_file_name//' '/'_'}"
+        echo "$proposed_filename" && echo  
+    done < <(find "$source_dir_fullpath" -type f -name "* *")
+
+    echo "DIRECTORY FILES WITH INTRA-FILENAME SPACES:"
+    echo "=========================================" && echo
+
+    while IFS=$'\n' read spaced_dir_name
+    do
+        ((spaced_dir_files_count++))
+        echo -e "\e[40m$spaced_dir_files_count:\e[0m";
+        echo "$spaced_dir_name"
+        proposed_filename="${spaced_dir_name//' '/'_'}"
+        echo "$proposed_filename" && echo  
+    done < <(find "$source_dir_fullpath" -type d -name "* *")
+
+    IFS=$OIFS 
+
+    echo "TOTAL SPACED REGULAR FILES: $spaced_reg_files_count" && echo
+    echo "TOTAL SPACED DIRECTORY FILES: $spaced_dir_files_count" && echo
+
+    #NOTE:
+    #((all_files_count++))
+    #((all_files_count+=1))
+    #all_files_count=$(( all_files_count + 1 ))
+
+}
+
+###########################################################
+
 # find and show us those spaced files
 function find_files_and_show_user()
 {    
@@ -115,26 +279,8 @@ function find_files_and_show_user()
             #echo "found one WITHOUT spaces"
         fi 
         
-        ((all_files_count++))
-        #((all_files_count+=1))
-        #all_files_count=$(( all_files_count + 1 ))
+
         
-        if [ $all_files_count -eq 0 ]
-        then         
-            echo "TOTAL SPACED FILES: $spaced_files_count"
-            echo "TOTAL FILES: $all_files_count" 
-
-            break
-        fi
-
-        if [ $all_files_count -ge 100 ] 
-        then         
-            echo "TOTAL SPACED FILES: $spaced_files_count"
-            echo "TOTAL FILES: $all_files_count" 
-
-            break
-        fi
-
     done
     IFS=$OIFS  
 
@@ -176,7 +322,12 @@ function rename_files()
     IFS=$OIFS
 
 } # end function
+
+
 ##########################################################################################################
+##########################################################################################################
+##########################################################################################################
+
 
 # we test that the parameter we got is of the correct form for an absolute file | sanitised (trailing / removed)
 # +directory path. if this test fails, there's no point doing anything further
