@@ -3,10 +3,21 @@
 # fileset_mover.sh
 # aka file_matcher_mover.sh
 
-# move media files from wherever they are in the source dir, directly into the destination dir
+# move matching regular files from wherever they are under the\
+# +source directory, directly into the destination directory ...
+# just regular files
+# just matching file extensions
 
 function main()
 {
+    config_file_fullpath="/etc/file_matcher_mover.config"
+    sudo nano "$config_file_fullpath" # /etc exists, so no need to test access etc.
+    
+    get_config_update_confirmation
+
+    set_program_configuration
+
+    exit 0
 
     move_matching_files #
 
@@ -15,25 +26,28 @@ function main()
 
 
 ###########################################################
+# user prompted to update and save the configuration file for this program
+function get_config_update_confirmation()
+{
+
+    :
+
+}
+
+###########################################################
+# 
+function set_program_configuration()
+{
+
+    # for line in read src_dir_path dst_dir_path file_extension
+
+    #    < "$config_file_fullpath" 
+
+}
+
+###########################################################
 function move_matching_files()
 {
-    ################################### EDIT THIS SECTION #############################################
-    # specify the file extension to match:
-    #file_extension=".mp4"  ## REMEMBER TO ESCAPE SPECIAL CHARS WITH \
-    #file_extension=".mkv"
-    #file_extension=".srt"
-    #file_extension=".epub"
-    file_extension=".mobi"
-
-    # specify source directory:
-    src_dir_path="/media/damola/2TB_ext_hdd/holding_pen_2TB/source"
-    #src_dir_path="/media/damola/2TB_ext_hdd/holding_pen_2TB/test_source"	
-
-    # specify destination directory:
-    dst_dir_path="/media/damola/2TB_ext_hdd/holding_pen_2TB/scan"
-    #dst_dir_path="/media/damola/2TB_ext_hdd/holding_pen_2TB/test_scan"	
-    ###################################################################################################
-
     OIFS=$IFS # store pre-existing IFS to be reset at end
     count=1
     # quote directory:
