@@ -21,7 +21,9 @@ function move_matching_files()
     # specify the file extension to match:
     #file_extension=".mp4"  ## REMEMBER TO ESCAPE SPECIAL CHARS WITH \
     #file_extension=".mkv"
-    file_extension=".srt"
+    #file_extension=".srt"
+    #file_extension=".epub"
+    file_extension=".mobi"
 
     # specify source directory:
     src_dir_path="/media/damola/2TB_ext_hdd/holding_pen_2TB/source"
