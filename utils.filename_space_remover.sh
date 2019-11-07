@@ -9,14 +9,20 @@
 #: Options		:
 ##
 
-# program allows user to review, then rename up to 100 files at a time.
+# program allows user to review file listings before renaming them.
 # full, unchecked, uncontrolled, non-interactive renaming of what\
-# + could be 1000s of found files now seems a bit risky.
+# + could be 100s of found files now seems a bit risky.
 
 function main()
 {
+	# GLOBAL VARIABLE DECLARATIONS:
+	test_line="" # global...
+    
     source_dir_fullpath="" # OR #test_line=""
-    abs_filepath_regex='^(/{1}[A-Za-z0-9\._-~]+)+$' # absolute file path, ASSUMING NOT HIDDEN FILE, ...
+    excluded_dir_config_file_fullpath="/etc/filename_space_remover.excluded_dir_config"
+	declare -a directories_to_exclude=() # ...
+
+    abs_filepath_regex='^(/{1}[A-Za-z0-9\.\ _-~]+)+$' # absolute file path, ASSUMING NOT HIDDEN FILE, ...
     all_filepath_regex='^(/?[A-Za-z0-9\._-~]+)+$' # both relative and absolute file path
     # totals for each subset of files:
     all_reg_files_count=0
@@ -24,32 +30,11 @@ function main()
     spaced_reg_files_count=0
     spaced_dir_files_count=0
     
+    # >>>>>>>>>> SHOULD WE JUST START HERE BY OPENING A CONFIG FILE USING nano? <<<<<<<<<<
+
     get_dir_to_check # including validation of this user input
 
-    get_file_totals
-
-    #reset_file_totals
-
-    #all_reg_files_count=$(get_file_totals2 "$all_reg_files_count" "f" "*")
-    #all_dir_files_count=$(get_file_totals2 "$all_dir_files_count" "d" "*")
-    #spaced_reg_files_count=$(get_file_totals2 "$spaced_reg_files_count" "f" "* *")
-    #spaced_dir_files_count=$(get_file_totals2 "$spaced_dir_files_count" "d" "* *")
-        
-    # negative response terminates program, affirmative just allows continuation
-    get_continue_response "numbers look credible? continue with these numers? [y/n] (or q to quit program)"
-    
-    test_for_more_spaced_filenames # program exits if test fails (ie no more found)
-
-    list_spaced_files # output numbered lists of each subset of intra-space character files
-
-    exit 0
-
-
-
-    get_continue_response "Based on the above lists, do you now want to make ex-program fs changes? [y/n]\n (or q to quit program)"
-
-    find_files_and_show_user
-    
+    generate_updated_file_listings 
 
     exit 0
 
@@ -63,6 +48,118 @@ function main()
 ##########################################################################################################
 ##########################################################################################################
 
+# loop over this block of code until whole of the output listing is ready to be renamed
+function generate_updated_file_listings()
+{    
+    while : #1
+    do
+
+        # import directories to exclude from updated excludes config file
+        # this is the first thing to happen after editing the config file
+        import_excludes_config
+
+        get_file_totals
+
+        #reset_file_totals
+
+        #all_reg_files_count=$(get_file_totals2 "$all_reg_files_count" "f" "*")
+        #all_dir_files_count=$(get_file_totals2 "$all_dir_files_count" "d" "*")
+        #spaced_reg_files_count=$(get_file_totals2 "$spaced_reg_files_count" "f" "* *")
+        #spaced_dir_files_count=$(get_file_totals2 "$spaced_dir_files_count" "d" "* *")
+
+        # negative response terminates program, affirmative just allows continuation
+        get_continue_response "numbers look credible? continue with these numers? [y/n] (or q to quit program)"
+        if [ $? -eq 0 ]
+        then
+            echo "Your answer was AFFIRMATIVE" && echo && sleep 1
+            echo "Continuing program execution..." && sleep 1
+        else
+            echo "Your answer was NEGATIVE" && echo && sleep 1
+            echo "Aborting program execution..." && sleep 1 
+            exit 0 ## perhaps in future branch we'll continue loop?
+        fi
+
+        test_for_more_spaced_filenames # program exits if test fails (ie no more found)
+
+        list_spaced_files # output numbered lists of each subset of intra-space character files
+
+        get_continue_response "Based on the above lists, READY FOR RENAME [y] or do you now want to\
+ make more filesystem OR directory exclude config file changes[n] ? (or q to quit program)"
+        if [ $? -eq 0 ]
+        then
+            echo "Your answer was AFFIRMATIVE" && echo && sleep 1
+            echo "Continuing program execution..." && sleep 1
+            break ## and exit function
+        else
+            echo "Your answer was NEGATIVE" && echo && sleep 1
+            echo "Make your filesystem and directory-exclusion-configuration changes now" && echo && sleep 1
+            echo "Opening your editor now..." && echo && sleep 3
+            while : #2
+            do
+                sudo nano "$excluded_dir_config_file_fullpath"
+                get_continue_response "Changes completed and ready to REFRESH listings? [y] or do you now want to\
+ make yet MORE filesystem OR directory exclude config file changes [n] ? (or q to quit program)"
+                if [ $? -eq 0 ]
+                then
+                    echo "Your answer was AFFIRMATIVE" && echo && sleep 1
+                    echo "Continuing program execution (refresh listings)..." && sleep 1
+                    break ## .. and back into while #1
+                else
+                    echo "Your answer was NEGATIVE" && echo && sleep 1
+                    echo "Make your filesystem and directory-exclusion-configuration changes now" && echo && sleep 1
+                    echo "Opening your editor now..." && echo && sleep 3
+                    # # .. and repeat #2..
+                fi
+            done #2        
+        fi
+
+    done #1
+
+}
+##########################################################################################################
+# populate the directories_to_exclude indexed array from the config file
+function import_excludes_config()
+{
+    if [ -f "$excluded_dir_config_file_fullpath" ]; then :; else sudo touch "$excluded_dir_config_file_fullpath"; fi
+
+	echo "exit code after line tests: $?" && echo
+    # all lines in file must pass test in order to continue the import
+
+	## TODO: if $? -eq 0 ... ANY POINT IN BRINGING BACK A RETURN CODE?
+
+	# if tests passed, configuration file is accepted and used from here on
+	echo "we can use this configuration file" && echo
+
+    # populate the designated array variable
+	while read lineIn
+	do
+		directories_to_exclude+=("$lineIn")  # 
+
+	done < "$excluded_dir_config_file_fullpath"
+
+
+    for dir in "${directories_to_exclude[@]}"
+	do
+		#test_and_set_line_type "$lineIn"
+        sanitise_absolute_path_value "$dir"
+        dir="$test_line"
+        echo "back from sanitisation and dir (from excluded config) has value: ${dir}"
+
+        test_file_path_valid_form "$dir"
+        if [ $? -eq 0 ]
+        then
+            echo "EXCLUDED DIRECTORY PATH IS OF VALID FORM"
+        else
+            echo "The valid form test FAILED and returned: $?"
+            echo "Nothing to do now, but to exit..." && echo
+            exit 1
+            #exit $E_UNEXPECTED_ARG_VALUE
+        fi	
+    done
+}
+
+##########################################################################################################
+
 # gets from user the directory (absolute path) in which to recursively check/
 # +for filenames with spaces. 
 function get_dir_to_check()
@@ -71,6 +168,8 @@ function get_dir_to_check()
     read source_dir_fullpath
 
     sanitise_absolute_path_value "$source_dir_fullpath"
+    source_dir_fullpath="$test_line"
+    echo "back from sanitisation and source_dir_fullpath has value: ${source_dir_fullpath}"
 
     # this valid form test works for both sanitised directory paths and absolute file paths
     test_file_path_valid_form "$source_dir_fullpath"
@@ -121,12 +220,63 @@ function get_file_totals()
 
     while IFS=$'\n' read spaced_file_name
     do
-        ((spaced_reg_files_count++))   
+        # if filename (spaced) matches an item in the directories_to_exclude array,
+        # then skip, else increment counter
+        match_found="false"
+        for dir in "${directories_to_exclude[@]}"
+	    do
+	    	if [ "$dir" == "${spaced_file_name}"* ]
+	    	then
+                # we're ignoring (not counting) this directory
+                match_found="true"
+	    		break
+	    	fi
+        done
+
+        # 
+        if [ "$match_found" == "true" ]
+        then
+            :
+        elif [ "$match_found" == "false" ]
+        then
+            ((spaced_reg_files_count++))
+        else
+            echo "We should never have entered this branch!"
+            exit 1
+        fi    
+           
     done < <(find "$source_dir_fullpath" -type f -name "* *")
+
+    ######################################
 
     while IFS=$'\n' read spaced_dir_name
     do
-        ((spaced_dir_files_count++))   
+        # if filename (spaced) matches an item in the directories_to_exclude array,
+        # then skip, else increment counter
+        match_found="false"
+        for dir in "${directories_to_exclude[@]}"
+	    do
+	    	if [ "$dir" == "${spaced_dir_name}"* ]
+	    	then
+                # we're ignoring (not counting) this directory
+                match_found="true"
+	    		break
+	    	fi
+        done
+
+        # 
+        if [ "$match_found" == "true" ]
+        then
+            :
+        elif [ "$match_found" == "false" ]
+        then
+            ((spaced_dir_files_count++))   
+        else
+            echo "We should never have entered this branch!"
+            exit 1
+        fi    
+
+
     done < <(find "$source_dir_fullpath" -type d -name "* *")
 
     IFS=$OIFS 
@@ -163,7 +313,7 @@ function get_file_totals2()
 
 ###########################################################
 
-# get user response
+# get user response y -> 0; n -> 1 
 function get_continue_response()
 {    
     msg=$1
@@ -171,11 +321,9 @@ function get_continue_response()
     read answer
 
     case $answer in 
-	[yY])   :
+	[yY])   return 0
 				;;
-	[nN])   echo "check fs manually, then run this program again. come back." && sleep 1
-            echo "exiting now..." && sleep 1
-            exit 0
+	[nN])   return 1
  				;;
 	[qQ])	echo
 			echo "Goodbye!" && sleep 1
@@ -219,23 +367,73 @@ function list_spaced_files()
     # first < is redirection, second is process substitution
     while IFS=$'\n' read spaced_file_name
     do
-        ((spaced_reg_files_count++))
-        echo -e "\e[40m$spaced_reg_files_count:\e[0m";
-        echo "$spaced_file_name"
-        proposed_filename="${spaced_file_name//' '/'_'}"
-        echo "$proposed_filename" && echo  
+        # if filename (spaced) matches an item in the directories_to_exclude array,
+        # then skip, else increment counter and list 
+        match_found="false"
+        for dir in "${directories_to_exclude[@]}"
+	    do
+	    	if [ "$dir" == "${spaced_file_name}"* ]
+	    	then
+                # we're ignoring (not counting) this directory
+                match_found="true"
+	    		break
+	    	fi
+        done
+
+        # 
+        if [ "$match_found" == "true" ]
+        then
+            :
+        elif [ "$match_found" == "false" ]
+        then
+            ((spaced_reg_files_count++))
+            echo -e "\e[40m$spaced_reg_files_count:\e[0m";
+            echo "$spaced_file_name"
+            proposed_filename="${spaced_file_name//' '/'_'}"
+            echo "$proposed_filename" && echo  
+        else
+            echo "We should never have entered this branch!"
+            exit 1
+        fi    
+        
     done < <(find "$source_dir_fullpath" -type f -name "* *")
+
+    #####################################
 
     echo "DIRECTORY FILES WITH INTRA-FILENAME SPACES:"
     echo "=========================================" && echo
 
     while IFS=$'\n' read spaced_dir_name
     do
-        ((spaced_dir_files_count++))
-        echo -e "\e[40m$spaced_dir_files_count:\e[0m";
-        echo "$spaced_dir_name"
-        proposed_filename="${spaced_dir_name//' '/'_'}"
-        echo "$proposed_filename" && echo  
+        # if filename (spaced) matches an item in the directories_to_exclude array,
+        # then skip, else increment counter
+        match_found="false"
+        for dir in "${directories_to_exclude[@]}"
+	    do
+	    	if [ "$dir" == "${spaced_dir_name}"* ]
+	    	then
+                # we're ignoring (not counting) this directory
+                match_found="true"
+	    		break
+	    	fi
+        done
+
+        # 
+        if [ "$match_found" == "true" ]
+        then
+            :
+        elif [ "$match_found" == "false" ]
+        then
+            ((spaced_dir_files_count++))
+            echo -e "\e[40m$spaced_dir_files_count:\e[0m";
+            echo "$spaced_dir_name"
+            proposed_filename="${spaced_dir_name//' '/'_'}"
+            echo "$proposed_filename" && echo     
+        else
+            echo "We should never have entered this branch!"
+            exit 1
+        fi    
+        
     done < <(find "$source_dir_fullpath" -type d -name "* *")
 
     IFS=$OIFS 
@@ -247,42 +445,6 @@ function list_spaced_files()
     #((all_files_count++))
     #((all_files_count+=1))
     #all_files_count=$(( all_files_count + 1 ))
-
-}
-
-###########################################################
-
-# find and show us those spaced files
-function find_files_and_show_user()
-{    
-    all_files_count=0
-    spaced_files_count=0
-    OIFS=$IFS # store pre-existing IFS to be reset at end
-
-    echo "Filename with intra-spaces:"
-    echo "Proposed file rename:"
-
-    find "$source_dir_fullpath" -type f |
-    while IFS=$'\n' read spaced_filename
-    do
-        #echo -e "\e[40m$all_files_count:\e[0m";
-
-        if echo "$spaced_filename" | grep -q ' '
-        then
-            ((spaced_files_count++))
-            echo -e "\e[40m$spaced_files_count:\e[0m";
-            echo "$spaced_filename"
-            filename="${spaced_filename//' '/'_'}"
-            echo "$filename" && echo
-        else
-            :
-            #echo "found one WITHOUT spaces"
-        fi 
-        
-
-        
-    done
-    IFS=$OIFS  
 
 }
 
@@ -386,10 +548,6 @@ echo && echo "ENTERED INTO FUNCTION ${FUNCNAME[0]}" && echo
     done    
 
 	echo "test line after trim cleanups in "${FUNCNAME[0]}" is: $test_line" && echo
-
-    source_dir_fullpath="$test_line"
-
-    echo "source_dir_fullpath after trim cleanups in "${FUNCNAME[0]}" is: $source_dir_fullpath" && echo
 
 echo && echo "LEAVING FROM FUNCTION ${FUNCNAME[0]}" && echo
 
