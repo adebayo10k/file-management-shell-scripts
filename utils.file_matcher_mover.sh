@@ -10,6 +10,7 @@
 
 function main()
 {
+        
     config_file_fullpath="/etc/file_matcher_mover.config"
     sudo nano "$config_file_fullpath" # /etc exists, so no need to test access etc.
     
@@ -39,6 +40,7 @@ function get_config_update_confirmation()
 function set_program_configuration()
 {
 
+    :
     # for line in read src_dir_path dst_dir_path file_extension
 
     #    < "$config_file_fullpath" 
