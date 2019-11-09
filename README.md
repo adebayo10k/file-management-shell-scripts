@@ -8,18 +8,20 @@ Feel free to download or fork any of the work contained here. This project is be
 
 These programs will be part of my utilities library. Providing some specific **file management services**
 
-# file_matcher_mover.sh
+# file_matcher_mover
 
-To move my acquired media files from wherever they are in a source dir, directly into a destination dir
+To move matching files from whatever depth they are in a source directory, directly into depth level 1 of the destination directory.
+Criteria to match, source and destination directories are read from a configuration file.
 
-# file_matcher_renamer.sh
+# file_matcher_renamer
 
 use to find files that match user specified criteria, then to rename those files in a way specified by user
 
-# filename_space_remover.sh
+# filename_space_remover
 
-Linux doesn't like spaces in filenames. Neither do I really.
-Renames files in a directory, with space characters replaced by underscores.
+Linux doesn't like spaces in filenames. Neither do I.
+
+Renames matching files in a specified directory, with space characters replaced by underscores. Able to exclude directories from search using configuration file.
 
 ---
 
