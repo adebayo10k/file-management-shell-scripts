@@ -3,43 +3,71 @@
 # fileset_mover.sh
 # aka file_matcher_mover.sh
 
-# move matching regular files from wherever they are under the\
-# +source directory, directly into the destination directory ...
+# move matching regular files from whatever depth they are under the\
+# +source directory, directly into the destination directory (depth 1)...
 # just regular files
 # just matching file extensions
 
 function main()
 {
-        
-    config_file_fullpath="/etc/file_matcher_mover.config"
-    sudo nano "$config_file_fullpath" # /etc exists, so no need to test access etc.
+
+    # GLOBAL VARIABLE DECLARATIONS:
+	test_line="" # global...
     
-    get_config_update_confirmation
+    src_dir_fullpath="" # OR #test_line=""
+    dst_dir_fullpath="" # OR #test_line=""
 
-    set_program_configuration
+    config_file_fullpath="/etc/file_matcher_mover.config"	declare -a directories_to_exclude=() # ...
 
-    exit 0
+    abs_filepath_regex='^(/{1}[A-Za-z0-9\.\ _-~]+)+$' # absolute file path, ASSUMING NOT HIDDEN FILE, ...
+    all_filepath_regex='^(/?[A-Za-z0-9\._-~]+)+$' # both relative and absolute file path
+    
+    # totals for each subset of files:
+    all_reg_files_count=0
+    all_dir_files_count=0
+    matched_reg_files_count=0
+    matched_dir_files_count=0
 
-    move_matching_files #
+    # show user program header and purpose of this program
+    # give them the option to abort or continue
+     
+    
+    match_and_move_files
 
 
 } ## end main
 
 
 ###########################################################
-# user prompted to update and save the configuration file for this program
-function get_config_update_confirmation()
+# the while loop that encapsulated pretty much the whole of this program
+function match_and_move_files()
 {
+    more_files_to_move="yes"
 
-    :
+    while [ "$more_files_to_move" == 'yes']
+    do
+       
+       echo "Opening your editor now..." && echo && sleep 3
+       sudo nano "$config_file_fullpath" # /etc exists, so no need to test access etc.
 
+       # read file match configuration
+       import_file_match_configuration
+
+       exit 0
+
+
+       move_matching_files #
+
+
+
+    done
 }
 
 ###########################################################
 # 
-function set_program_configuration()
+function import_file_match_configuration()
 {
-
+    # ignore comment lines, space char lines, empty lines ....
     :
     # for line in read src_dir_path dst_dir_path file_extension
 
