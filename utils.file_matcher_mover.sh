@@ -15,13 +15,15 @@
 
 function main()
 {
+    echo "OUR CURRENT SHELL LEVEL IS: $SHLVL"
+
+	echo "USAGE: $(basename $0)"
 
     # Display a program header and give user option to leave if here in error:
     echo
-    #echo "\033[33m"+$i+"\033[0m";
-    echo -e "\033[33m============================================================================\033[0m";
-    echo -e "\033[33m||    Welcome to the FILE EXTENSION MATCHING, REGULAR FILE MOVING UTILITY    ||  author: Damola Adebayo\033[0m";  
-    echo -e "\033[33m============================================================================\033[0m";
+    echo -e "       \033[33m============================================================================\033[0m";
+    echo -e "       \033[33m||   Welcome to the FILE EXTENSION MATCHING, REGULAR FILE MOVING UTILITY  ||  author: Damola Adebayo\033[0m";  
+    echo -e "       \033[33m============================================================================\033[0m";
     echo
     echo " Type q to quit NOW, or press ENTER to continue."
     echo && sleep 1

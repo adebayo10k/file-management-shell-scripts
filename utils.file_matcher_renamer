@@ -9,13 +9,29 @@
 #: Options			:None
 #: Usage			:
 
+echo "OUR CURRENT SHELL LEVEL IS: $SHLVL"
 
-echo "	==================================================================="
-echo "	||       Welcome to the FILE MATCHING AND RENAMING UTILITY        ||  author: Damola Adebayo"  
-echo "	==================================================================="
+echo "USAGE: $(basename $0)"
+
+# Display a program header and give user option to leave if here in error:
 echo
-echo " Type q to quit."
+echo -e "		\033[33m===================================================================\033[0m";
+echo -e "		\033[33m||       Welcome to the FILE MATCHING AND RENAMING UTILITY       ||  author: adebayo10k\033[0m";  
+echo -e "		\033[33m===================================================================\033[0m";
+echo
+echo " Type q to quit NOW, or press ENTER to continue."
 echo && sleep 1
+read last_chance
+case $last_chance in 
+[qQ])	echo
+		echo "Goodbye!" && sleep 1
+		exit 0
+			;;
+*) 		echo "You're IN..." && echo && sleep 1
+	 		;;
+esac 
+exit 0
+
 
 # specify error codes
 # exit script correctly

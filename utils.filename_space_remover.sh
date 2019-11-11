@@ -15,7 +15,31 @@
 
 function main()
 {
-	# GLOBAL VARIABLE DECLARATIONS:
+	echo "OUR CURRENT SHELL LEVEL IS: $SHLVL"
+
+	echo "USAGE: $(basename $0)"  
+	
+	# Display a program header and give user option to leave if here in error:
+    echo
+    echo -e "		\033[33m===================================================================\033[0m";
+    echo -e "		\033[33m||          Welcome to the INTRA-FILENAME SPACE REMOVER          ||  author: adebayo10k\033[0m";  
+    echo -e "		\033[33m===================================================================\033[0m";
+    echo
+    echo " Type q to quit NOW, or press ENTER to continue."
+    echo && sleep 1
+    read last_chance
+
+    case $last_chance in 
+	[qQ])	echo
+			echo "Goodbye!" && sleep 1
+			exit 0
+				;;
+	*) 		echo "You're IN..." && echo && sleep 1
+		 		;;
+    esac 
+
+    
+    # GLOBAL VARIABLE DECLARATIONS:
 	test_line="" # global...
     
     source_dir_fullpath="" # OR #test_line=""
