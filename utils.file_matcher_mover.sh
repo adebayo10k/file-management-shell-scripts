@@ -50,16 +50,17 @@ function main()
 
     # GLOBAL VARIABLE DECLARATIONS:
 	test_line="" # global...
-    
-    src_dir_fullpath="" # OR #test_line=""
-    dst_dir_fullpath="" # OR #test_line=""
+    line_type="" # global...
 
+    source_dir_fullpath="" # OR #test_line=""
+    destination_dir_fullpath="" # OR #test_line=""
+    file_extension=""
     config_file_fullpath="/etc/file_matcher_mover.config"
     #declare -a directories_to_exclude=() # ...
 
     abs_filepath_regex='^(/{1}[A-Za-z0-9\.\ _-~]+)+$' # absolute file path, ASSUMING NOT HIDDEN FILE, ...
     all_filepath_regex='^(/?[A-Za-z0-9\._-~]+)+$' # both relative and absolute file path. CAREFUL, THIS.
-    # MATCHES NEARLY ANY STRING!
+    # +MATCHES NEARLY ANY STRING!
     file_extension_regex='^\.{1}[A-Za-z0-9]+$'
     
     # totals for each subset of files:
@@ -68,7 +69,7 @@ function main()
     matched_reg_files_count=0
     matched_dir_files_count=0
 
-    # show user program header and purpose of this protest_and_set_line_type
+    # 
     match_and_move_files
 
 
@@ -84,13 +85,11 @@ function match_and_move_files()
     while [ "$more_files_to_move" == 'yes' ]
     do
                
-        echo "Opening your editor now..." && echo && sleep 3
+        echo "Opening your editor now..." && echo && sleep 2
         sudo nano "$config_file_fullpath" # /etc exists, so no need to test access etc.
         # no need to validate config file path here, since we've just edited the config file!
 
         check_config_file_content
-
-        exit 0
 
         # read file match configuration
         import_file_match_configuration
@@ -129,30 +128,68 @@ function check_config_file_content()
 
 	done < "$config_file_fullpath" 
 
-	#echo "exit code for test of that line was: $?" && echo
-	#if [ $? -eq 0 ]
-    #then
-    #    # if tests passed, configuration file is accepted and used from here on
-    #    echo "we can use this configuration file" && echo
-    #    export config_file_fullpath
-    #else
-    #    echo "That configuration file was not well formed"
-	#	echo "Exiting from function ${FUNCNAME[0]} in script $(basename $0)"
-    #    exit 0
-    #fi
-
-
-
 }
 ###########################################################
 # 
 function import_file_match_configuration()
 {
-    # ignore comment lines, space char lines, empty lines ....
-    :
-    # for line in read src_dir_path dst_dir_path file_extension
+    
+	echo
+	echo "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
+	echo "STARTING THE 'IMPORT CONFIGURATION INTO VARIABLES' PHASE in script $(basename $0)"
+	echo "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
+	echo
 
-    #    < "$config_file_fullpath" 
+    get_dirs_fullpath_config
+	get_file_extension_config
+	
+	# NOW DO ALL THE DIRECTORY ACCESS TESTS FOR IMPORTED PATH VALUES HERE.
+	# REMEMBER THAT ORDER IS IMPORTANT, AS RELATIVE PATHS DEPEND ON ABSOLUTE.
+
+	for dir in "$destination_dir_fullpath" "$source_dir_fullpath"
+	do
+
+		# this valid form test works for sanitised directory paths
+		test_file_path_valid_form "$dir"
+		return_code=$?
+		if [ $return_code -eq 0 ]
+		then
+			echo "HOLDING (PARENT) DIRECTORY PATH IS OF VALID FORM"
+		else
+			echo "The valid form test FAILED and returned: $return_code"
+			echo "Nothing to do now, but to exit..." && echo
+			exit $E_UNEXPECTED_ARG_VALUE
+		fi	
+
+		# if the above test returns ok, ...
+		test_dir_path_access "$dir"
+		return_code=$?
+		if [ $return_code -eq 0 ]
+		then
+			echo "The full path to the HOLDING (PARENT) DIRECTORY is: $dir"
+		else
+			echo "The HOLDING (PARENT) DIRECTORY path access test FAILED and returned: $return_code"
+			echo "Nothing to do now, but to exit..." && echo
+			exit $E_REQUIRED_FILE_NOT_FOUND
+		fi
+
+	done
+
+	# NOW TEST THE VALUE WE'VE IMPORTED FOR THE SINGLE (FOR NOW) FILE EXTENSION:
+    # although we already tested these to id them in the first place, just making sure
+    # nothing's changed
+
+    echo "before imported variable test, file extension was set to: "$file_extension"   "
+    
+    if [[ "$file_extension" =~ $file_extension_regex ]]
+    then
+        echo "The valid file extension is: $file_extension"
+    else
+        echo "File extension regex match test FAILED"
+		echo "Nothing to do now, but to exit..." && echo
+		exit $E_REQUIRED_FILE_NOT_FOUND
+	fi
+
 
 }
 
@@ -242,9 +279,6 @@ function test_and_set_line_type
 	test_line="${1}"
 	line_type=""
 
-	#debug printouts:
-	#echo "$test_line"
-
 	if [[ "$test_line" == "#"* ]] # line is a comment
 	then
 		line_type="comment"
@@ -283,5 +317,300 @@ function test_and_set_line_type
 
 }
 ##########################################################################################################
+# for any absolute file path value to be imported...
+function get_dirs_fullpath_config
+{
+
+	echo && echo "ENTERED INTO FUNCTION ${FUNCNAME[0]}" && echo
+
+	for keyword in "destination_dir_fullpath=" "source_dir_fullpath="
+	do
+
+		line_type=""
+		value_collection="OFF"
+
+		while read lineIn
+		do
+
+			test_and_set_line_type "$lineIn" # interesting for the line FOLLOWING that keyword find
+
+			if [[ $value_collection == "ON" && $line_type == "value_string" ]]
+			then
+				sanitise_absolute_path_value "$lineIn"
+				echo "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
+				echo "test_line has the value: $test_line"
+				echo "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
+				set -- $test_line # using 'set' to get test_line out of this subprocess into a positional parameter ($1)
+
+			elif [[ $value_collection == "ON" && $line_type != "value_string" ]]
+			# last value has been collected for this directory
+			then
+				value_collection="OFF" # just because..
+				break # end this while loop, as last value has been collected for this holding directory
+			else
+				# value collection must be OFF
+				:
+			fi
+			
+			
+			# switch value collection ON for the NEXT line read
+			# THEREFORE WE'RE ASSUMING THAT A KEYWORD CANNOT EXIST ON THE 1ST LINE OF THE FILE
+			if [[ "$lineIn" == "$keyword" ]]
+			then
+				value_collection="ON"
+			fi
+
+		done < "$config_file_fullpath"
+
+		# ASSIGN
+		echo "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
+		echo "test_line has the value: $1"
+		echo "the keyword on this for-loop is set to: $keyword"
+		echo "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
+
+		if [ "$keyword" == "destination_dir_fullpath=" ]
+		then
+			destination_dir_fullpath="$1"
+			# test_line just set globally in sanitise_absolute_path_value function
+		elif [ "$keyword" == "source_dir_fullpath=" ]
+		then
+			source_dir_fullpath="$1"
+			# test_line just set globally in sanitise_absolute_path_value function
+		else
+			echo "Failsafe branch entered"
+			exit $E_UNEXPECTED_BRANCH_ENTERED
+		fi
+
+		set -- # unset that positional parameter we used to get test_line out of that while read subprocess
+		echo "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
+		echo "test_line (AFTER set --) has the value: $1"
+		echo "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
+
+	done
+
+	echo && echo "LEAVING FROM FUNCTION ${FUNCNAME[0]}" && echo
+
+}
+
+##########################################################################################################
+## VARIABLE 3:
+function get_file_extension_config
+{
+
+echo && echo "ENTERED INTO FUNCTION ${FUNCNAME[0]}" && echo
+
+	keyword="file_extension="
+	line_type=""
+	value_collection="OFF"
+
+	while read lineIn
+	do
+
+		test_and_set_line_type "$lineIn" # interesting for the line FOLLOWING that keyword find
+
+		if [[ $value_collection == "ON" && $line_type == "value_string" ]]
+		then
+			# lineIn must be the extension value we're looking for
+            # but do we santise it? and if so how? 
+            sanitise_file_extension_value "$lineIn"
+			set -- $test_line # 
+
+		elif [[ $value_collection == "ON" && $line_type != "value_string" ]]
+        # last value has been collected for file_extension
+		then 
+			value_collection="OFF" # just because..
+			break # end this while loop, as last value has been collected for file_extension
+		else
+			# value collection must be OFF
+			:
+		fi
+		
+		
+		# switch value collection ON for the NEXT line read
+		# THEREFORE WE'RE ASSUMING THAT A KEYWORD CANNOT EXIST ON THE 1ST LINE OF THE FILE
+		if [[ "$lineIn" == "$keyword" ]]
+		then
+			value_collection="ON"
+		fi
+
+	done < "$config_file_fullpath"
+
+
+	# ASSIGN 
+	file_extension=$1 # test_line was just set globally in sanitise_file_extension_value function
+	set -- # unset that positional parameter we used to get test_line out of that while read subprocess
+
+echo && echo "LEAVING FROM FUNCTION ${FUNCNAME[0]}" && echo
+
+}
+
+##########################################################################################################
+# keep sanitise functions separate and specialised, as we may add more to specific value types in future
+# FINAL OPERATION ON VALUE, SO GLOBAL test_line SET HERE. RENAME CONCEPTUALLY DIFFERENT test_line NAMESAKES
+function sanitise_absolute_path_value ##
+{
+
+echo && echo "ENTERED INTO FUNCTION ${FUNCNAME[0]}" && echo
+
+    # sanitise values
+	# - trim leading and trailing space characters
+	# - trim trailing / for all paths
+	test_line="${1}"
+	echo "test line on entering "${FUNCNAME[0]}" is: $test_line" && echo
+
+	while [[ "$test_line" == *'/' ]] ||\
+	 [[ "$test_line" == *[[:blank:]] ]] ||\
+	 [[ "$test_line" == [[:blank:]]* ]]
+	do 
+		# TRIM TRAILING AND LEADING SPACES AND TABS
+		# backstop code, as with leading spaces, config file line wouldn't even have been
+		# recognised as a value!
+		test_line=${test_line%%[[:blank:]]}
+		test_line=${test_line##[[:blank:]]}
+
+		# TRIM TRAILING / FOR ABSOLUTE PATHS:
+		test_line=${test_line%'/'}
+	done
+
+	echo "test line after trim cleanups in "${FUNCNAME[0]}" is: $test_line" && echo
+
+	## sanitise values
+	## - trim leading and trailing space characters
+	## - trim trailing / for all paths
+	#test_line="${1}"
+	#echo "test line on entering "${FUNCNAME[0]}" is: $test_line" && echo
+#
+	## TRIM TRAILING AND LEADING SPACES AND TABS
+	#test_line=${test_line%%[[:blank:]]}
+	#test_line=${test_line##[[:blank:]]}
+#
+	## TRIM TRAILING / FOR ABSOLUTE PATHS:
+    #while [[ "$test_line" == *'/' ]]
+    #do
+    #    echo "FOUND TRAILING SLASH"
+    #    test_line=${test_line%'/'}
+    #done 
+#
+	#echo "test line after trim cleanups in "${FUNCNAME[0]}" is: $test_line" && echo
+
+echo && echo "LEAVING FROM FUNCTION ${FUNCNAME[0]}" && echo
+
+}
+##########################################################################################################
+# keep sanitise functions separate and specialised, as we may add more to specific value types in future 
+function sanitise_file_extension_value ##
+{
+
+echo && echo "ENTERED INTO FUNCTION ${FUNCNAME[0]}" && echo
+
+	# sanitise values
+	# - trim leading and trailing space characters
+	test_line="${1}"
+	echo "test line on entering "${FUNCNAME[0]}" is: $test_line" && echo
+
+	# TRIM TRAILING AND LEADING SPACES AND TABS
+	test_line=${test_line%%[[:blank:]]}
+	test_line=${test_line##[[:blank:]]}
+
+	echo "test line after trim cleanups in "${FUNCNAME[0]}" is: $test_line" && echo
+
+echo && echo "LEAVING FROM FUNCTION ${FUNCNAME[0]}" && echo
+
+}
+##########################################################################################################
+
+# firstly, we test that the parameter we got is of the correct form for an absolute file | sanitised directory path 
+# if this test fails, there's no point doing anything further
+# 
+function test_file_path_valid_form
+{
+	echo && echo "ENTERED INTO FUNCTION ${FUNCNAME[0]}" && echo
+
+	test_result=
+	test_file_fullpath=$1
+	
+	echo "test_file_fullpath is set to: $test_file_fullpath"
+	#echo "test_dir_fullpath is set to: $test_dir_fullpath"
+
+	if [[ $test_file_fullpath =~ $abs_filepath_regex ]]
+	then
+		echo "THE FORM OF THE INCOMING PARAMETER IS OF A VALID ABSOLUTE FILE PATH"
+		test_result=0
+	else
+		echo "AN INCOMING PARAMETER WAS SET, BUT WAS NOT A MATCH FOR OUR KNOWN PATH FORM REGEX "$abs_filepath_regex"" && sleep 1 && echo
+		echo "Returning with a non-zero test result..."
+		test_result=1
+		return $E_UNEXPECTED_ARG_VALUE
+	fi 
+
+
+	echo && echo "LEAVING FROM FUNCTION ${FUNCNAME[0]}" && echo
+
+	return "$test_result"
+}
+
+###############################################################################################
+# need to test for read access to file 
+# 
+function test_file_path_access
+{
+	echo && echo "ENTERED INTO FUNCTION ${FUNCNAME[0]}" && echo
+
+	test_result=
+	test_file_fullpath=$1
+
+	echo "test_file_fullpath is set to: $test_file_fullpath"
+
+	# test for expected file type (regular) and read permission
+	if [ -f "$test_file_fullpath" ] && [ -r "$test_file_fullpath" ]
+	then
+		# test file found and accessible
+		echo "Test file found to be readable" && echo
+		test_result=0
+	else
+		# -> return due to failure of any of the above tests:
+		test_result=1 # just because...
+		echo "Returning from function \"${FUNCNAME[0]}\" with test result code: $E_REQUIRED_FILE_NOT_FOUND"
+		return $E_REQUIRED_FILE_NOT_FOUND
+	fi
+
+	echo && echo "LEAVING FROM FUNCTION ${FUNCNAME[0]}" && echo
+
+	return "$test_result"
+}
+###############################################################################################
+# need to test for access to the file holding directory
+# 
+function test_dir_path_access
+{
+	echo && echo "ENTERED INTO FUNCTION ${FUNCNAME[0]}" && echo
+
+	test_result=
+	test_dir_fullpath=$1
+
+	echo "test_dir_fullpath is set to: $test_dir_fullpath"
+
+    if ! [ -d "$test_dir_fullpath" ]
+    then
+        mkdir -p "$dst_dir_path" # build parent directory structure if needed
+    fi
+
+    if [ -d "$test_dir_fullpath" ] && cd "$test_dir_fullpath" 2>/dev/null
+	then
+		# directory file found and accessible
+		echo "directory "$test_dir_fullpath" found and accessed ok" && echo
+		test_result=0
+	else
+		# -> return due to failure of any of the above tests:
+		test_result=1
+		echo "Returning from function \"${FUNCNAME[0]}\" with test result code: $E_REQUIRED_FILE_NOT_FOUND"
+		return $E_REQUIRED_FILE_NOT_FOUND
+	fi
+
+	echo && echo "LEAVING FROM FUNCTION ${FUNCNAME[0]}" && echo
+
+	return "$test_result"
+}
+###############################################################################################
 
 main "$@"; exit
