@@ -17,5 +17,10 @@ do
     output_file="${input_file%${input_file_extension}}""${output_file_extension}"
     echo "input file:  $input_file"
     echo "output file:  $output_file"
+    echo "... encoding ..." && echo
+
+    ffmpeg -i "${input_file}" -qscale 0 "${output_file}" -hide_banner
+
+
 done
 
