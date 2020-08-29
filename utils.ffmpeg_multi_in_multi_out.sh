@@ -9,18 +9,17 @@
 #: Options			:None
 #: Usage			:
 
-input_file_extension=".m4v"
+input_file_extension=".VOB"
 output_file_extension=".mp4"
 
-for input_file in $HOME/INSANITY/*${input_file_extension}
+for input_file in $HOME/INSANITY_fullscreen/*${input_file_extension}
 do
     output_file="${input_file%${input_file_extension}}""${output_file_extension}"
     echo "input file:  $input_file"
     echo "output file:  $output_file"
     echo "... encoding ..." && echo
 
-    ffmpeg -i "${input_file}" -qscale 0 "${output_file}" -hide_banner
-
+    ffmpeg -i "${input_file}" -qscale 0 "${output_file}"
 
 done
 
