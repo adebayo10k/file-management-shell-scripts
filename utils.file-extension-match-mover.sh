@@ -57,7 +57,7 @@ function main()
     source_dir_fullpath="" # OR #test_line=""
     destination_dir_fullpath="" # OR #test_line=""
     file_extension=""
-    config_file_fullpath="/etc/file_extension_match_mover.config"
+    config_file_fullpath="/etc/file-extension-match-mover.config"
     #declare -a directories_to_exclude=() # ...
 
     abs_filepath_regex='^(/{1}[A-Za-z0-9\.\ _-~]+)+$' # absolute file path, ASSUMING NOT HIDDEN FILE, ...
