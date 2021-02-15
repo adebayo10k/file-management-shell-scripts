@@ -9,6 +9,16 @@
 #: Options			:None
 #: Usage			:
 
+
+
+
+
+# UPDATE THIS PROGRAM
+# MAKE IT INTERACTIVE, SO USER COPY-PASTES OR TYPES IN THE REQUIRED PARAMETERS
+
+
+
+
 echo "OUR CURRENT SHELL LEVEL IS: $SHLVL"
 
 echo "USAGE: $(basename $0)"
@@ -158,7 +168,7 @@ function rename_set_of_files_pad_nums()
 #2. use sed, variable expansion (substitution, trim,..) or regex to construct the new filename
 
 ################################### EDIT THIS SECTION #############################################
-#directory="/media/damola/2TB_ext_hdd_0/audio_books/Headspace"
+#directory="/media/"$(id -un)"/2TB_ext_hdd_0/audio_books/Headspace"
 # no need to escape chars for the find
 #directory="$HOME/Downloads/Headspace - Meditation and Mindfulness Made Simple (2018)"
 #directory="$HOME/Take Files"
