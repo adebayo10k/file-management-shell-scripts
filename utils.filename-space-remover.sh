@@ -120,7 +120,7 @@ function generate_updated_file_listings()
             echo "Opening your editor now..." && echo && sleep 3
             while : #2
             do
-                sudo nano "$excluded_dir_config_file_fullpath"
+                nano "$excluded_dir_config_file_fullpath"
                 get_continue_response "Changes completed and ready to REFRESH listings? [y] or do you now want to\
  make yet MORE filesystem OR directory exclude config file changes [n] ? (or q to quit program)"
                 if [ $? -eq 0 ]

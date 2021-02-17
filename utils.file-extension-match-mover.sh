@@ -90,7 +90,7 @@ function match_and_move_files()
     do
                
         echo "Opening your editor now..." && echo && sleep 2
-        sudo nano "$config_file_fullpath" # /etc exists, so no need to test access etc.
+        nano "$config_file_fullpath" # /etc exists, so no need to test access etc.
         # no need to validate config file path here, since we've just edited the config file!
 
         check_config_file_content
