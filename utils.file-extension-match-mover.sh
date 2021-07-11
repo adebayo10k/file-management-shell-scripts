@@ -18,16 +18,22 @@
 
 # make all those library function available to this script
 shared_bash_functions_fullpath="${SHARED_LIBRARIES_DIR}/shared-bash-functions.sh"
+shared_bash_constants_fullpath="${SHARED_LIBRARIES_DIR}/shared-bash-constants.inc.sh"
 
-if [ -f "$shared_bash_functions_fullpath" ]
-then
-	echo "got our library functions ok"
-else
-	echo "failed to get our functions library. Exiting now."
-	exit 1
-fi
-
-source "$shared_bash_functions_fullpath"
+for resource in "$shared_bash_functions_fullpath" "$shared_bash_constants_fullpath"
+do
+	if [ -f "$resource" ]
+	then
+		echo "Required library resource FOUND OK at:"
+		echo "$resource"
+		source "$resource"
+	else
+		echo "Could not find the required resource at:"
+		echo "$resource"
+		echo "Check that location. Nothing to do now, except exit."
+		exit 1
+	fi
+done
 
 
 # 2. MAKE SCRIPT-SPECIFIC FUNCTIONS AVAILABLE HERE
@@ -93,16 +99,6 @@ function main()
 
     ##########################################
 
-    ## EXIT CODES:
-	E_UNEXPECTED_BRANCH_ENTERED=10
-	E_OUT_OF_BOUNDS_BRANCH_ENTERED=11
-	E_INCORRECT_NUMBER_OF_ARGS=12
-	E_UNEXPECTED_ARG_VALUE=13
-	E_REQUIRED_FILE_NOT_FOUND=20
-	E_REQUIRED_PROGRAM_NOT_FOUND=21
-	E_UNKNOWN_RUN_MODE=30
-	E_UNKNOWN_EXECUTION_MODE=31
-
     # GLOBAL VARIABLE DECLARATIONS:
 	test_line="" # global...
     line_type="" # global...
@@ -113,11 +109,7 @@ function main()
     config_file_fullpath="/etc/file-extension-match-mover.config"
     #declare -a directories_to_exclude=() # ...
 
-    abs_filepath_regex='^(/{1}[A-Za-z0-9._-~]+)+$' # absolute file path, ASSUMING NOT HIDDEN FILE, ...
-    all_filepath_regex='^(/?[A-Za-z0-9\._-~]+)+$' # both relative and absolute file path. CAREFUL, THIS.
-    # +MATCHES NEARLY ANY STRING!
-    file_extension_regex='^\.{1}[A-Za-z0-9]+$'
-    
+
     # totals for each subset of files:
     all_reg_files_count=0
     all_dir_files_count=0
@@ -237,7 +229,7 @@ function import_file_match_configuration()
 
     echo "before imported variable test, file extension was set to: "$file_extension"   "
     
-    if [[ "$file_extension" =~ $file_extension_regex ]]
+    if [[ "$file_extension" =~ $FILE_EXTENSION_REGEX ]]
     then
         echo "The valid file extension is: $file_extension"
     else
@@ -354,7 +346,7 @@ function test_and_set_line_type
 		then
 			line_type="value_string"
 			echo "line_type set to: "$line_type" for "$test_line""
-        elif [[ "$test_line" =~ $file_extension_regex ]]	#
+        elif [[ "$test_line" =~ $FILE_EXTENSION_REGEX ]]	#
 		then
 			line_type="value_string"
 			echo "line_type set to: "$line_type" for "$test_line""

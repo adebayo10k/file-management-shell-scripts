@@ -18,16 +18,22 @@
 
 # make all those library function available to this script
 shared_bash_functions_fullpath="${SHARED_LIBRARIES_DIR}/shared-bash-functions.sh"
+shared_bash_constants_fullpath="${SHARED_LIBRARIES_DIR}/shared-bash-constants.inc.sh"
 
-if [ -f "$shared_bash_functions_fullpath" ]
-then
-	echo "got our library functions ok"
-else
-	echo "failed to get our functions library. Exiting now."
-	exit 1
-fi
-
-source "$shared_bash_functions_fullpath"
+for resource in "$shared_bash_functions_fullpath" "$shared_bash_constants_fullpath"
+do
+	if [ -f "$resource" ]
+	then
+		echo "Required library resource FOUND OK at:"
+		echo "$resource"
+		source "$resource"
+	else
+		echo "Could not find the required resource at:"
+		echo "$resource"
+		echo "Check that location. Nothing to do now, except exit."
+		exit 1
+	fi
+done
 
 
 # 2. MAKE SCRIPT-SPECIFIC FUNCTIONS AVAILABLE HERE
@@ -101,8 +107,6 @@ function main()
     excluded_dir_config_file_fullpath="/etc/filename_space_remover.excluded_dir_config"
 	declare -a directories_to_exclude=() # ...
 
-    abs_filepath_regex='^(/{1}[A-Za-z0-9._-~]+)+$' # absolute file path, ASSUMING NOT HIDDEN FILE, ...
-    all_filepath_regex='^(/?[A-Za-z0-9\._-~]+)+$' # both relative and absolute file path
     # totals for each subset of files:
     all_reg_files_count=0
     all_dir_files_count=0
