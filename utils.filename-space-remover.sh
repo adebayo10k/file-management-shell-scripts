@@ -570,8 +570,6 @@ function rename_files()
 
 
 ##########################################################################################################
-##########################################################################################################
-##########################################################################################################
 
 
 # we test that the parameter we got is of the correct form for an absolute file | sanitised (trailing / removed)
@@ -605,36 +603,6 @@ function test_file_path_valid_form
 	return "$test_result"
 }
 
-###############################################################################################
-
-# FINAL OPERATION ON VALUE, SO GLOBAL test_line SET HERE. RENAME CONCEPTUALLY DIFFERENT test_line NAMESAKES
-function sanitise_absolute_path_value ##
-{
-
-echo && echo "ENTERED INTO FUNCTION ${FUNCNAME[0]}" && echo
-
-	# sanitise values
-	# - trim leading and trailing space characters
-	# - trim trailing / for all paths
-	test_line="${1}"
-	echo "test line on entering "${FUNCNAME[0]}" is: $test_line" && echo
-
-	# TRIM TRAILING AND LEADING SPACES AND TABS
-	test_line=${test_line%%[[:blank:]]}
-	test_line=${test_line##[[:blank:]]}
-
-	# TRIM TRAILING / FOR ABSOLUTE PATHS:
-    while [[ "$test_line" == *'/' ]]
-    do
-        echo "FOUND ENDING SLASH"
-        test_line=${test_line%'/'}
-    done    
-
-	echo "test line after trim cleanups in "${FUNCNAME[0]}" is: $test_line" && echo
-
-echo && echo "LEAVING FROM FUNCTION ${FUNCNAME[0]}" && echo
-
-}
 ###############################################################################################
 # need to test for access and write permission to the file holding directory
 # 
