@@ -65,12 +65,10 @@ fi
 #source "${canonical_dirname}/preset-profile-builder.inc.sh"
 
 
-# THAT STUFF JUST HAPPENED BEFORE MAIN FUNCTION CALL!
+# THAT STUFF JUST HAPPENED (EXECUTED) BEFORE MAIN FUNCTION CALL!
 ##################################################################
 ##################################################################
 
-
-# ALSO, need to SIMPLIFY current iterations! get rid of clever but overcomplicated code.
 
 function main()
 {

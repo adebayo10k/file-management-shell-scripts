@@ -65,7 +65,7 @@ fi
 #source "${canonical_dirname}/preset-profile-builder.inc.sh"
 
 
-# THAT STUFF JUST HAPPENED BEFORE MAIN FUNCTION CALL!
+# THAT STUFF JUST HAPPENED (EXECUTED) BEFORE MAIN FUNCTION CALL!
 ##################################################################
 ##################################################################
 

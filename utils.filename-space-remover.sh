@@ -9,6 +9,11 @@
 #: Options		:
 ##
 
+
+# program allows user to review file listings before renaming them.
+# full, unchecked, uncontrolled, non-interactive renaming of what\
+# + could be 100s of found files now seems a bit risky.
+
 ##################################################################
 ##################################################################
 # THIS STUFF IS HAPPENING BEFORE MAIN FUNCTION CALL:
@@ -65,14 +70,10 @@ fi
 #source "${canonical_dirname}/preset-profile-builder.inc.sh"
 
 
-# THAT STUFF JUST HAPPENED BEFORE MAIN FUNCTION CALL!
+# THAT STUFF JUST HAPPENED (EXECUTED) BEFORE MAIN FUNCTION CALL!
 ##################################################################
 ##################################################################
 
-
-# program allows user to review file listings before renaming them.
-# full, unchecked, uncontrolled, non-interactive renaming of what\
-# + could be 100s of found files now seems a bit risky.
 
 function main()
 {
